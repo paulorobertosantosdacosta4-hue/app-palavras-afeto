@@ -1,89 +1,84 @@
 // Tipos para o aplicativo Amante das Palavras de Afeto
 
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  bio?: string;
-  avatar?: string;
-  seal?: string; // Selo personalizado
-  joinedAt: Date;
-  followersCount: number;
-  followingCount: number;
-  lettersCount: number;
+  id: string
+  name: string
+  username: string
+  avatar?: string
+  bio?: string
+  followers: string[]
+  following: string[]
+  isAnonymous?: boolean
 }
 
-export interface Letter {
-  id: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  author: User;
-  category: LetterCategory;
-  isAnonymous: boolean;
-  isPrivate: boolean;
-  recipientId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  likesCount: number;
-  commentsCount: number;
-  readsCount: number;
-  isLiked?: boolean;
-  isFeatured?: boolean;
+export interface Post {
+  id: string
+  title: string
+  content: string
+  type: 'carta' | 'poesia' | 'bilhete'
+  authorId: string
+  authorName: string
+  isAnonymous: boolean
+  likes: string[] // IDs dos usuários que curtiram
+  comments: Comment[]
+  createdAt: Date
+  tags?: string[]
 }
-
-export type LetterCategory = 
-  | 'amor' 
-  | 'saudade' 
-  | 'desejo' 
-  | 'superacao' 
-  | 'gratidao' 
-  | 'anonima';
 
 export interface Comment {
-  id: string;
-  content: string;
-  author: User;
-  letterId: string;
-  createdAt: Date;
-  likesCount: number;
+  id: string
+  postId: string
+  authorId: string
+  authorName: string
+  content: string
+  createdAt: Date
+  isAnonymous: boolean
 }
 
-export interface Follow {
-  id: string;
-  followerId: string;
-  followingId: string;
-  createdAt: Date;
+export interface Message {
+  id: string
+  senderId: string
+  receiverId: string
+  content: string
+  type: 'digital' | 'physical'
+  createdAt: Date
+  isRead: boolean
 }
 
 export interface CustomOrder {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  theme: string;
-  emotionalTone: string;
-  deliveryType: 'digital' | 'physical';
-  price: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'delivered';
-  createdAt: Date;
-  completedAt?: Date;
+  id: string
+  clientId: string
+  type: 'carta' | 'poesia' | 'bilhete'
+  description: string
+  specialInstructions?: string
+  price: number
+  status: 'pending' | 'in_progress' | 'completed' | 'delivered'
+  createdAt: Date
+  deliveryDate?: Date
+}
+
+export interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  image: string
+  category: 'kit' | 'personalizado' | 'acessorio'
+  inStock: boolean
+}
+
+export interface CartItem {
+  productId: string
+  quantity: number
+  customization?: string
 }
 
 export interface Notification {
-  id: string;
-  userId: string;
-  type: 'like' | 'comment' | 'follow' | 'letter_read' | 'featured';
-  message: string;
-  isRead: boolean;
-  createdAt: Date;
-  relatedId?: string;
-}
-
-export interface LibraryCollection {
-  id: string;
-  title: string;
-  description: string;
-  category: LetterCategory;
-  letters: Letter[];
-  isPublic: boolean;
+  id: string
+  userId: string
+  type: 'like' | 'comment' | 'follow' | 'message' | 'order'
+  message: string
+  isRead: boolean
+  createdAt: Date
+  relatedId?: string
 }

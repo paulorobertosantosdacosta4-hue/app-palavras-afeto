@@ -17,15 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Amante das Palavras de Afeto - Onde o amor é escrito à mão",
-  description: "Plataforma de emoção, escrita e conexão. Publique cartas de amor, bilhetes e poesias. Encomende textos personalizados escritos com o coração.",
-  keywords: "cartas de amor, poesias, bilhetes românticos, escrita afetiva, correspondência, romantismo",
-  authors: [{ name: "Paulo - Amante das Palavras de Afeto" }],
-  openGraph: {
-    title: "Amante das Palavras de Afeto",
-    description: "Onde o amor é escrito à mão. Junte-se a uma comunidade que acredita no poder das palavras escritas com o coração.",
-    type: "website",
-  },
+  title: "Cartas do Coração - Resgatando a Poesia dos Sentimentos",
+  description: "Uma rede social poética onde você pode ler, escrever, publicar e trocar cartas de amor, poesias e bilhetes. Encomende textos personalizados e produtos afetivos únicos.",
 };
 
 export default function RootLayout({
@@ -39,7 +32,7 @@ export default function RootLayout({
         <Script src="/lasy-bridge.js" strategy="beforeInteractive" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-serif`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

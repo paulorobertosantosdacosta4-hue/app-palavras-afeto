@@ -1,457 +1,344 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Feather, Heart, BookOpen, ShoppingBag, Users, Library, Sparkles, Bell, User, Mail } from 'lucide-react';
-import { LetterFeed } from '@/components/LetterFeed';
-import { LetterEditor } from '@/components/LetterEditor';
-import { LetterViewer } from '@/components/LetterViewer';
-import { AffectionStore } from '@/components/AffectionStore';
-import { AffectionLibrary } from '@/components/AffectionLibrary';
-import { UserProfile } from '@/components/UserProfile';
-import { CorrespondenceExchange } from '@/components/CorrespondenceExchange';
-import { NotificationCenter } from '@/components/NotificationCenter';
-import { getPoeticalMessage } from '@/lib/utils';
-import { Letter } from '@/lib/types';
-import { mockUsers, mockLetters } from '@/lib/mock-data';
+import { useState } from 'react'
+import { Heart, Feather, BookOpen, Users, ShoppingBag, Star, Send, User, Search, Filter } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+
+// Dados mockados para demonstração
+const featuredLetters = [
+  {
+    id: 1,
+    title: "Para Você, Meu Amor",
+    preview: "Nas manhãs silenciosas, quando o sol desponta tímido no horizonte, penso em você...",
+    author: "Ana Clara",
+    isAnonymous: false,
+    likes: 127,
+    type: "carta",
+    date: "2 dias atrás"
+  },
+  {
+    id: 2,
+    title: "Versos do Coração",
+    preview: "Teus olhos são estrelas que guiam meu caminho, tua voz é melodia que embala meus sonhos...",
+    author: "Anônimo",
+    isAnonymous: true,
+    likes: 89,
+    type: "poesia",
+    date: "1 semana atrás"
+  },
+  {
+    id: 3,
+    title: "Bilhete de Saudade",
+    preview: "Deixo estas palavras como quem deixa flores no caminho, esperando que chegues até elas...",
+    author: "João Santos",
+    isAnonymous: false,
+    likes: 203,
+    type: "bilhete",
+    date: "3 dias atrás"
+  }
+]
+
+const products = [
+  {
+    id: 1,
+    name: "Kit Cartas Vintage",
+    price: "R$ 45,90",
+    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=300&fit=crop",
+    description: "Papel pergaminho, envelopes e selos temáticos"
+  },
+  {
+    id: 2,
+    name: "Carta Personalizada",
+    price: "R$ 89,90",
+    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=300&h=300&fit=crop",
+    description: "Texto exclusivo criado especialmente para você"
+  },
+  {
+    id: 3,
+    name: "Poesia Sob Medida",
+    price: "R$ 129,90",
+    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=300&fit=crop",
+    description: "Versos únicos para momentos especiais"
+  }
+]
 
 export default function Home() {
-  const [showLetterEditor, setShowLetterEditor] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
-  const [selectedLetter, setSelectedLetter] = useState<Letter | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [letters, setLetters] = useState<Letter[]>(mockLetters);
+  const [activeTab, setActiveTab] = useState("feed")
+  const [newPost, setNewPost] = useState({ title: "", content: "", type: "carta", isAnonymous: false })
+  const [searchQuery, setSearchQuery] = useState("")
 
-  const currentUser = mockUsers[0]; // Usuário logado (Paulo)
-  const userLetters = letters.filter(letter => letter.author.id === currentUser.id);
-
-  const handleSaveLetter = (letterData: any) => {
-    const newLetter: Letter = {
-      id: Date.now().toString(),
-      title: letterData.title,
-      content: letterData.content,
-      excerpt: letterData.content.substring(0, 150) + '...',
-      author: currentUser,
-      category: letterData.category,
-      isAnonymous: letterData.isAnonymous,
-      isPrivate: letterData.isPrivate,
-      recipientId: letterData.recipientEmail ? 'recipient-id' : undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      likesCount: 0,
-      commentsCount: 0,
-      readsCount: 0,
-      isLiked: false,
-      isFeatured: false
-    };
-
-    setLetters(prev => [newLetter, ...prev]);
-    
-    if (!letterData.isPrivate) {
-      setActiveTab('feed');
-    }
-  };
-
-  const handleReadMore = (letter: Letter) => {
-    setLetters(prev => prev.map(l => 
-      l.id === letter.id 
-        ? { ...l, readsCount: l.readsCount + 1 }
-        : l
-    ));
-    setSelectedLetter(letter);
-  };
-
-  const handleLike = (letterId: string) => {
-    setLetters(prev => prev.map(letter => 
-      letter.id === letterId 
-        ? { 
-            ...letter, 
-            isLiked: !letter.isLiked,
-            likesCount: letter.isLiked ? letter.likesCount - 1 : letter.likesCount + 1
-          }
-        : letter
-    ));
-  };
-
-  const handleComment = (letterId: string) => {
-    console.log('Comentar na carta:', letterId);
-  };
-
-  const handleSendPrivateLetter = (userId: string) => {
-    setSelectedUserId(userId);
-    setShowLetterEditor(true);
-  };
-
-  const handleViewProfile = (userId: string) => {
-    setSelectedUserId(userId);
-    setActiveTab('profile');
-  };
-
-  const stats = [
-    { label: 'Cartas Publicadas', value: letters.filter(l => !l.isPrivate).length.toString(), icon: Heart },
-    { label: 'Escritores Ativos', value: '342', icon: Users },
-    { label: 'Leituras Realizadas', value: letters.reduce((sum, l) => sum + l.readsCount, 0).toString(), icon: BookOpen },
-    { label: 'Corações Tocados', value: '∞', icon: Sparkles }
-  ];
+  const handlePublish = () => {
+    // Aqui seria a lógica para publicar
+    console.log("Publicando:", newPost)
+    setNewPost({ title: "", content: "", type: "carta", isAnonymous: false })
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F1E8] via-[#F0E6D2] to-[#EBD5B7]">
-      {/* Textura de papel vintage */}
-      <div className="fixed inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23D4AF37\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] pointer-events-none" />
-      
-      <div className="relative">
-        {/* Header */}
-        <header className="border-b border-[#D4AF37]/20 bg-white/30 backdrop-blur-sm sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 bg-gradient-to-br from-[#D4AF37] to-[#B8941F] rounded-full flex items-center justify-center">
-                  <Feather className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-serif text-xl font-bold text-[#8B4513]">
-                    Amante das Palavras de Afeto
-                  </h1>
-                  <p className="text-xs text-[#8B4513]/60 italic">
-                    Onde o amor é escrito à mão
-                  </p>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-rose-200 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-2 rounded-full">
+                <Heart className="w-6 h-6 text-white" />
               </div>
-              
-              <nav className="hidden md:flex items-center space-x-1">
-                <Button
-                  variant={activeTab === 'home' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('home')}
-                  className={activeTab === 'home' 
-                    ? 'bg-[#D4AF37] text-white' 
-                    : 'text-[#8B4513] hover:bg-[#D4AF37]/10'
-                  }
-                >
-                  Início
-                </Button>
-                <Button
-                  variant={activeTab === 'feed' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('feed')}
-                  className={activeTab === 'feed' 
-                    ? 'bg-[#D4AF37] text-white' 
-                    : 'text-[#8B4513] hover:bg-[#D4AF37]/10'
-                  }
-                >
-                  Mural de Cartas
-                </Button>
-                <Button
-                  variant={activeTab === 'library' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('library')}
-                  className={activeTab === 'library' 
-                    ? 'bg-[#D4AF37] text-white' 
-                    : 'text-[#8B4513] hover:bg-[#D4AF37]/10'
-                  }
-                >
-                  <Library className="h-4 w-4 mr-1" />
-                  Biblioteca
-                </Button>
-                <Button
-                  variant={activeTab === 'exchange' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('exchange')}
-                  className={activeTab === 'exchange' 
-                    ? 'bg-[#D4AF37] text-white' 
-                    : 'text-[#8B4513] hover:bg-[#D4AF37]/10'
-                  }
-                >
-                  <Mail className="h-4 w-4 mr-1" />
-                  Correspondência
-                </Button>
-                <Button
-                  variant={activeTab === 'store' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('store')}
-                  className={activeTab === 'store' 
-                    ? 'bg-[#D4AF37] text-white' 
-                    : 'text-[#8B4513] hover:bg-[#D4AF37]/10'
-                  }
-                >
-                  Loja Afetiva
-                </Button>
-              </nav>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowNotifications(true)}
-                  className="text-[#8B4513] hover:bg-[#D4AF37]/10 relative"
-                >
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-1 -right-1 bg-[#D4AF37] text-white text-xs w-5 h-5 rounded-full p-0 flex items-center justify-center">
-                    3
-                  </Badge>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleViewProfile(currentUser.id)}
-                  className="text-[#8B4513] hover:bg-[#D4AF37]/10"
-                >
-                  <User className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  onClick={() => setShowLetterEditor(true)}
-                  className="bg-gradient-to-r from-[#D4AF37] to-[#B8941F] hover:from-[#B8941F] hover:to-[#D4AF37] text-white transition-all duration-300 hover:shadow-lg"
-                >
-                  <Feather className="h-4 w-4 mr-2" />
-                  Escrever
-                </Button>
+              <div>
+                <h1 className="text-2xl font-serif font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+                  Cartas do Coração
+                </h1>
+                <p className="text-sm text-rose-600/70">Resgatando a poesia dos sentimentos</p>
               </div>
             </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="container mx-auto px-4 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            {/* Mobile Navigation */}
-            <TabsList className="md:hidden w-full bg-white/50 border border-[#D4AF37]/30 mb-8 grid grid-cols-3">
-              <TabsTrigger 
-                value="home"
-                className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-white text-xs"
-              >
-                Início
-              </TabsTrigger>
-              <TabsTrigger 
-                value="feed"
-                className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-white text-xs"
-              >
-                Cartas
-              </TabsTrigger>
-              <TabsTrigger 
-                value="store"
-                className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-white text-xs"
-              >
-                Loja
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Home Tab */}
-            <TabsContent value="home" className="space-y-12">
-              {/* Hero Section */}
-              <section className="text-center space-y-6 py-12">
-                <div className="space-y-4">
-                  <h2 className="font-serif text-4xl md:text-6xl text-[#8B4513] leading-tight">
-                    Onde o amor é
-                    <span className="block text-[#D4AF37]">escrito à mão</span>
-                  </h2>
-                  <p className="text-lg md:text-xl text-[#8B4513]/80 max-w-3xl mx-auto leading-relaxed">
-                    {getPoeticalMessage('welcome')}. Junte-se a uma comunidade que acredita no poder transformador das palavras escritas com o coração.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <Button
-                    onClick={() => setActiveTab('feed')}
-                    size="lg"
-                    className="bg-gradient-to-r from-[#D4AF37] to-[#B8941F] hover:from-[#B8941F] hover:to-[#D4AF37] text-white px-8 py-3 text-lg transition-all duration-300 hover:shadow-lg"
-                  >
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Explorar Cartas
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setShowLetterEditor(true)}
-                    size="lg"
-                    variant="outline"
-                    className="border-[#D4AF37] text-[#8B4513] hover:bg-[#D4AF37]/10 px-8 py-3 text-lg"
-                  >
-                    <Feather className="h-5 w-5 mr-2" />
-                    Escrever Minha Carta
-                  </Button>
-                </div>
-              </section>
-
-              {/* Stats Section */}
-              <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
-                  <Card key={index} className="bg-white/40 border-[#D4AF37]/20 hover:shadow-lg transition-all duration-300">
-                    <CardContent className="p-6 text-center">
-                      <stat.icon className="h-8 w-8 text-[#D4AF37] mx-auto mb-3" />
-                      <div className="text-2xl font-bold text-[#8B4513] mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm text-[#8B4513]/70">
-                        {stat.label}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </section>
-
-              {/* Features Section */}
-              <section className="grid md:grid-cols-3 gap-8">
-                <Card className="bg-gradient-to-br from-white/50 to-white/30 border-[#D4AF37]/20 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-8 text-center">
-                    <div className="text-4xl mb-4">💌</div>
-                    <h3 className="font-serif text-xl text-[#8B4513] mb-3">
-                      Publique Suas Cartas
-                    </h3>
-                    <p className="text-[#8B4513]/70 leading-relaxed">
-                      Compartilhe suas palavras do coração com uma comunidade que valoriza a escrita afetiva e a conexão humana.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-white/50 to-white/30 border-[#D4AF37]/20 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-8 text-center">
-                    <div className="text-4xl mb-4">✍️</div>
-                    <h3 className="font-serif text-xl text-[#8B4513] mb-3">
-                      Cartas Personalizadas
-                    </h3>
-                    <p className="text-[#8B4513]/70 leading-relaxed">
-                      Encomende cartas únicas escritas por Paulo, cada uma criada especialmente para tocar o coração de quem você ama.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-white/50 to-white/30 border-[#D4AF37]/20 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-8 text-center">
-                    <div className="text-4xl mb-4">🤝</div>
-                    <h3 className="font-serif text-xl text-[#8B4513] mb-3">
-                      Conecte-se
-                    </h3>
-                    <p className="text-[#8B4513]/70 leading-relaxed">
-                      Siga outros escritores, troque correspondências e faça parte de uma rede de pessoas que acreditam no poder das palavras.
-                    </p>
-                  </CardContent>
-                </Card>
-              </section>
-
-              {/* Call to Action */}
-              <section className="text-center bg-gradient-to-r from-[#D4AF37]/10 to-[#B8941F]/10 rounded-2xl p-8 border border-[#D4AF37]/20">
-                <h3 className="font-serif text-2xl text-[#8B4513] mb-4">
-                  Pronto para começar sua jornada poética?
-                </h3>
-                <p className="text-[#8B4513]/70 mb-6 max-w-2xl mx-auto">
-                  Junte-se a centenas de pessoas que já descobriram o prazer de expressar seus sentimentos através de cartas escritas com amor.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    onClick={() => setShowLetterEditor(true)}
-                    className="bg-gradient-to-r from-[#D4AF37] to-[#B8941F] hover:from-[#B8941F] hover:to-[#D4AF37] text-white px-6 py-3 transition-all duration-300 hover:shadow-lg"
-                  >
-                    Escrever Primeira Carta
-                  </Button>
-                  <Button
-                    onClick={() => setActiveTab('store')}
-                    variant="outline"
-                    className="border-[#D4AF37] text-[#8B4513] hover:bg-[#D4AF37]/10 px-6 py-3"
-                  >
-                    <ShoppingBag className="h-4 w-4 mr-2" />
-                    Encomendar Carta
-                  </Button>
-                </div>
-              </section>
-            </TabsContent>
-
-            {/* Feed Tab */}
-            <TabsContent value="feed">
-              <LetterFeed 
-                onWriteLetter={() => setShowLetterEditor(true)}
-                onReadMore={handleReadMore}
-                onLike={handleLike}
-                onComment={handleComment}
-              />
-            </TabsContent>
-
-            {/* Library Tab */}
-            <TabsContent value="library">
-              <AffectionLibrary
-                onReadMore={handleReadMore}
-                onLike={handleLike}
-                onComment={handleComment}
-              />
-            </TabsContent>
-
-            {/* Correspondence Exchange Tab */}
-            <TabsContent value="exchange">
-              <CorrespondenceExchange
-                onSendPrivateLetter={handleSendPrivateLetter}
-              />
-            </TabsContent>
-
-            {/* Store Tab */}
-            <TabsContent value="store">
-              <AffectionStore />
-            </TabsContent>
-
-            {/* Profile Tab */}
-            <TabsContent value="profile">
-              {selectedUserId && (
-                <UserProfile
-                  user={mockUsers.find(u => u.id === selectedUserId) || currentUser}
-                  letters={letters.filter(l => l.author.id === selectedUserId && !l.isPrivate)}
-                  isOwnProfile={selectedUserId === currentUser.id}
-                  isFollowing={false}
-                  onFollow={(userId) => console.log('Seguir:', userId)}
-                  onUnfollow={(userId) => console.log('Deixar de seguir:', userId)}
-                  onSendPrivateLetter={handleSendPrivateLetter}
-                  onEditProfile={() => console.log('Editar perfil')}
-                  onReadMore={handleReadMore}
-                  onLike={handleLike}
-                  onComment={handleComment}
+            
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-rose-400" />
+                <Input 
+                  placeholder="Buscar cartas, poesias..." 
+                  className="pl-10 w-64 border-rose-200 focus:border-rose-400"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              )}
-            </TabsContent>
-          </Tabs>
-        </main>
-
-        {/* Footer */}
-        <footer className="border-t border-[#D4AF37]/20 bg-white/20 backdrop-blur-sm mt-16">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center space-x-3">
-                <Feather className="h-5 w-5 text-[#D4AF37]" />
-                <span className="font-serif text-lg text-[#8B4513]">
-                  Amante das Palavras de Afeto
-                </span>
               </div>
-              <p className="text-sm text-[#8B4513]/60 italic max-w-md mx-auto">
-                "O romantismo vive em cada palavra escrita. Cada carta é um gesto de amor atemporal."
-              </p>
-              <div className="flex justify-center space-x-6 text-sm text-[#8B4513]/60">
-                <span>© 2024 Paulo - Amante das Palavras</span>
-                <span>•</span>
-                <span>Feito com ❤️ para quem acredita no amor</span>
-              </div>
+              <Avatar>
+                <AvatarImage src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop" />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
             </div>
           </div>
-        </footer>
+        </div>
+      </header>
 
-        {/* Modals */}
-        <LetterEditor
-          isOpen={showLetterEditor}
-          onClose={() => {
-            setShowLetterEditor(false);
-            setSelectedUserId(null);
-          }}
-          onSave={handleSaveLetter}
-        />
+      <div className="container mx-auto px-4 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Navigation */}
+          <TabsList className="grid w-full grid-cols-5 bg-white/60 backdrop-blur-sm border border-rose-200">
+            <TabsTrigger value="feed" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Feed
+            </TabsTrigger>
+            <TabsTrigger value="write" className="flex items-center gap-2">
+              <Feather className="w-4 h-4" />
+              Escrever
+            </TabsTrigger>
+            <TabsTrigger value="library" className="flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              Biblioteca
+            </TabsTrigger>
+            <TabsTrigger value="community" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Comunidade
+            </TabsTrigger>
+            <TabsTrigger value="shop" className="flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4" />
+              Loja
+            </TabsTrigger>
+          </TabsList>
 
-        <LetterViewer
-          letter={selectedLetter}
-          isOpen={!!selectedLetter}
-          onClose={() => setSelectedLetter(null)}
-          onLike={handleLike}
-          onComment={handleComment}
-        />
+          {/* Feed de Cartas */}
+          <TabsContent value="feed" className="mt-8">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {featuredLetters.map((letter) => (
+                <Card key={letter.id} className="bg-white/70 backdrop-blur-sm border-rose-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="border-rose-300 text-rose-700">
+                        {letter.type}
+                      </Badge>
+                      <span className="text-sm text-rose-600/70">{letter.date}</span>
+                    </div>
+                    <CardTitle className="text-rose-800 font-serif">{letter.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-rose-700/80 mb-4 font-serif italic leading-relaxed">
+                      "{letter.preview}"
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="text-xs bg-rose-100">
+                            {letter.isAnonymous ? "?" : letter.author[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-rose-600">
+                          {letter.isAnonymous ? "Anônimo" : letter.author}
+                        </span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700">
+                        <Heart className="w-4 h-4 mr-1" />
+                        {letter.likes}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
 
-        <NotificationCenter
-          isOpen={showNotifications}
-          onClose={() => setShowNotifications(false)}
-        />
+          {/* Escrever */}
+          <TabsContent value="write" className="mt-8">
+            <Card className="max-w-2xl mx-auto bg-white/70 backdrop-blur-sm border-rose-200">
+              <CardHeader>
+                <CardTitle className="text-rose-800 font-serif flex items-center gap-2">
+                  <Feather className="w-5 h-5" />
+                  Criar Nova Publicação
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Título</Label>
+                  <Input
+                    id="title"
+                    placeholder="Dê um título poético à sua criação..."
+                    value={newPost.title}
+                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                    className="border-rose-200 focus:border-rose-400"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="type">Tipo</Label>
+                  <select 
+                    className="w-full p-2 border border-rose-200 rounded-md focus:border-rose-400 focus:outline-none"
+                    value={newPost.type}
+                    onChange={(e) => setNewPost({...newPost, type: e.target.value})}
+                  >
+                    <option value="carta">Carta</option>
+                    <option value="poesia">Poesia</option>
+                    <option value="bilhete">Bilhete</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="content">Conteúdo</Label>
+                  <Textarea
+                    id="content"
+                    placeholder="Deixe seus sentimentos fluírem através das palavras..."
+                    className="min-h-[200px] border-rose-200 focus:border-rose-400 font-serif"
+                    value={newPost.content}
+                    onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="anonymous"
+                    checked={newPost.isAnonymous}
+                    onCheckedChange={(checked) => setNewPost({...newPost, isAnonymous: checked})}
+                  />
+                  <Label htmlFor="anonymous">Publicar anonimamente</Label>
+                </div>
+
+                <Button 
+                  onClick={handlePublish}
+                  className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Publicar
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Biblioteca */}
+          <TabsContent value="library" className="mt-8">
+            <div className="text-center py-12">
+              <Star className="w-16 h-16 mx-auto text-rose-400 mb-4" />
+              <h2 className="text-2xl font-serif text-rose-800 mb-2">Biblioteca Poética</h2>
+              <p className="text-rose-600/70 mb-6">Textos autorais e destaques da comunidade</p>
+              <Button className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600">
+                Explorar Coleção
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* Comunidade */}
+          <TabsContent value="community" className="mt-8">
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 mx-auto text-rose-400 mb-4" />
+              <h2 className="text-2xl font-serif text-rose-800 mb-2">Comunidade Poética</h2>
+              <p className="text-rose-600/70 mb-6">Conecte-se com outros amantes da palavra escrita</p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
+                <Card className="bg-white/70 backdrop-blur-sm border-rose-200">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="font-serif text-rose-800 mb-2">Seguir Autores</h3>
+                    <p className="text-sm text-rose-600/70">Acompanhe seus escritores favoritos</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/70 backdrop-blur-sm border-rose-200">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="font-serif text-rose-800 mb-2">Correspondências</h3>
+                    <p className="text-sm text-rose-600/70">Troque cartas com outros membros</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/70 backdrop-blur-sm border-rose-200">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="font-serif text-rose-800 mb-2">Conexões</h3>
+                    <p className="text-sm text-rose-600/70">Crie laços através da poesia</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Loja */}
+          <TabsContent value="shop" className="mt-8">
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-serif text-rose-800 mb-2">Loja Afetiva</h2>
+              <p className="text-rose-600/70">Produtos poéticos para momentos especiais</p>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <Card key={product.id} className="bg-white/70 backdrop-blur-sm border-rose-200 hover:shadow-lg transition-all duration-300">
+                  <div className="aspect-square overflow-hidden rounded-t-lg">
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="font-serif text-rose-800 text-lg mb-2">{product.name}</h3>
+                    <p className="text-rose-600/70 text-sm mb-4">{product.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-rose-700">{product.price}</span>
+                      <Button className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600">
+                        Encomendar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-white/60 backdrop-blur-sm border-t border-rose-200 mt-16">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Heart className="w-5 h-5 text-rose-500" />
+              <span className="font-serif text-rose-800">Cartas do Coração</span>
+            </div>
+            <p className="text-rose-600/70 text-sm">
+              Resgatando a magia das cartas de amor em tempos digitais
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }
